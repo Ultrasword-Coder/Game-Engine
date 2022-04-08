@@ -44,9 +44,16 @@ class Object:
 
     def __init__(self):
         """Constructor for Object class"""
+        # object identification
         self.object_id = 0
-        self.pos = [0, 0]
-        self.area = [0, 0]
+
+        # standard variables
+        self.pos = [0.0, 0.0]
+        self.area = [0.0, 0.0]
+
+        # physics properties
+        self.friction = [0.0, 0.0]
+        self.motion = [0.0, 0.0]
 
     @property
     def id(self):
@@ -64,6 +71,31 @@ class Object:
     def render(self):
         """Default render function"""
         pass
+
+    @property
+    def center(self):
+        """Get's center of the object"""
+        return (self.pos[0] + self.area[0] // 2, self.pos[1] + self.area[1] // 2)
+    
+    @property
+    def left(self):
+        """Get's left of object"""
+        return self.pos[0]
+    
+    @property
+    def right(self):
+        """Get's right of object"""
+        return self.pos[0] + self.area[0]
+    
+    @property
+    def top(self):
+        """Get's top of object"""
+        return self.pos[1]
+    
+    @property
+    def bottom(self):
+        """Get's bottom of object"""
+        return self.pos[1] + self.area[1]
 
 
 class PersistentObject(Object):

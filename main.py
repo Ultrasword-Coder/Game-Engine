@@ -1,7 +1,7 @@
 import pygame
 
 import engine
-from engine import window, clock, user_input, handler, draw, filehandler
+from engine import window, clock, user_input, handler, draw, filehandler, maths
 
 
 
@@ -36,12 +36,26 @@ class test(handler.Object):
     def update(self, dt):
         # print(dt)
         if user_input.is_key_pressed(pygame.K_a):
-            self.pos[0] -= 50 * dt
+            self.motion[0] -= 100 * dt
         if user_input.is_key_pressed(pygame.K_d):
-            self.pos[0] += 50 * dt
+            self.motion[0] += 100 * dt
+        if user_input.is_key_pressed(pygame.K_w):
+            self.motion[1] -= 100 * dt
+        if user_input.is_key_pressed(pygame.K_s):
+            self.motion[1] += 100 * dt
+        
+        # lerp
+        self.motion[0] = maths.lerp(self.motion[0], 0.0, 0.3)
+        self.motion[1] = maths.lerp(self.motion[1], 0.0, 0.3)
+
+        self.pos[0] += self.motion[0]
+        self.pos[1] += self.motion[1]
 
     def render(self):
         window.draw_buffer(self.image, self.pos)
+        # draw some lines facing the direction of the motion
+        c = self.center
+        draw.DEBUG_DRAW_LINE(window.get_framebuffer(), (255,0,0), c, (c[0] + self.motion[0] * 10, c[1] + self.motion[1] * 10), 1)
 
 HANDLER.add_entity_auto(test())
 
