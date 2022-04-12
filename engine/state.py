@@ -25,13 +25,14 @@ class State(handler.Handler, world.World):
         - and chunk handling
         
         """
-        super().__init__()
+        handler.Handler.__init__(self)
+        world.World.__init__(self)
     
     def start(self) -> None:
         """to be overriden by child class - should load the level or whatever it needs to load"""
         pass
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, rel_center: tuple = (0, 0)) -> None:
         """update the state and its handler"""
         self.render_chunks(rel_center)
         self.handle_entities(dt)

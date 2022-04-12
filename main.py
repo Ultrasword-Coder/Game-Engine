@@ -1,7 +1,7 @@
 import pygame
 
 import engine
-from engine import window, clock, user_input, handler, draw, filehandler, maths, state, animation
+from engine import window, clock, user_input, handler, draw, filehandler, maths, state, animation, world
 
 
 
@@ -19,14 +19,20 @@ HANDLER = state.State()
 state.push_state(HANDLER)
 
 
-
 # -------- testing ------ #
-
-img = filehandler.get_image("test/images/test1.png")
 
 object_data = handler.ObjectData(100, 100, 100, 100)
 
+c = HANDLER.make_template_chunk(0, 0)
+
+img = "test/images/kirb.jpeg"
+for x in range(world.CHUNK_WIDTH):
+    for y in range(world.CHUNK_HEIGHT):
+        c.set_tile_at(c.create_grid_tile(x, y, img))
+
+img = filehandler.get_image("test/images/test1.png")
 class test(handler.Object):
+
     def __init__(self):
         super().__init__()
         # set params
@@ -71,7 +77,7 @@ while running:
     window.fill_buffer(background)
 
     # updates
-    HANDLER.handle_entities(clock.delta_time)
+    HANDLER.update(clock.delta_time)
 
     # render
     window.push_buffer((0,0))

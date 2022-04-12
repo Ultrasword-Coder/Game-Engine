@@ -4,7 +4,7 @@ from engine import filehandler, window
 
 # chunks will have a set size of 12 x 12
 CHUNK_WIDTH = CHUNK_HEIGHT = 12
-CHUNK_TILE_WIDTH = CHUNK_TILE_HEIGHT = 32
+CHUNK_TILE_WIDTH = CHUNK_TILE_HEIGHT = 64
 CHUNK_WIDTH_PIX = CHUNK_WIDTH * CHUNK_TILE_WIDTH
 CHUNK_HEIGHT_PIX = CHUNK_HEIGHT * CHUNK_TILE_HEIGHT
 CHUNK_TILE_AREA = (CHUNK_TILE_WIDTH, CHUNK_TILE_HEIGHT)
@@ -19,14 +19,14 @@ class Chunk:
     def __init__(self, pos: tuple):
         """Chunk Constructor"""
         self.chunk_id = pos[0] + (pos[1] << 16)
-        self.pos = tuple(pos[0], pos[1])
+        self.pos = (pos[0], pos[1])
         self.world_pos = (pos[0] * CHUNK_WIDTH_PIX, pos[1] * CHUNK_HEIGHT_PIX)
 
         # images are all references cuz python only uses refs
         self.images = {}
 
         # visual aspects
-        self.tile_map = (Chunk.create_grid_tile(x, y, None) for x in range(CHUNK_WIDTH) for y in range(CHUNK_HEIGHT))
+        self.tile_map = tuple(tuple(Chunk.create_grid_tile(x, y, None) for x in range(CHUNK_WIDTH)) for y in range(CHUNK_HEIGHT))
 
     @property
     def id(self) -> int:
@@ -63,8 +63,9 @@ class Chunk:
             for y in range(CHUNK_HEIGHT):
                 # get block data
                 block = self.tile_map[y][x]
-                # render
-                window.FRAMEBUFFER.blit(self.images[block[TILE_IMG]], (block[TILE_X] + offset[0], block[TILE_Y] + offset[1]))
+                if block[TILE_IMG]:
+                    # render
+                    window.FRAMEBUFFER.blit(self.images[block[TILE_IMG]], (block[TILE_X] + offset[0], block[TILE_Y] + offset[1]))
 
 
 class World:
@@ -79,9 +80,10 @@ class World:
         """add a chunk to the world"""
         self.chunks[chunk.chunk_id] = chunk
     
-    def make_template_chunk(self, x: int, y: int) -> None:
+    def make_template_chunk(self, x: int, y: int) -> Chunk:
         """Make a default empty chunk"""
         self.chunks[x + (y << 16)] = Chunk((x, y))
+        return self.chunks[x + (y << 16)]
     
     def get_chunk(self, x: int, y: int) -> Chunk:
         """Get chunk from the world chunk cache"""
@@ -91,7 +93,8 @@ class World:
         """Render the world with the set render distance | include a center"""
         for cx in range(rel_center[0] - self.render_distance, rel_center[0] + self.render_distance + 1):
             for cy in range(rel_center[1] - self.render_distance, rel_center[1] + self.render_distance + 1):
-                self.get_chunk(cx, cy).render(offset)
+                if self.get_chunk(cx, cy):
+                    self.get_chunk(cx, cy).render(offset)
     
     @property
     def render_distance(self) -> int:
