@@ -18,6 +18,7 @@ CURRENT = None
 def push_state(state):
     """push a new state onto the state stack"""
     global CURRENT
+    state.start()
     CURRENT = state
     STATEQUEUE.append(state)
 
@@ -31,11 +32,14 @@ def previous_state(state):
         CURRENT = STATEQUEUE[-1]
 
 
-
 class State:
     def __init__(self):
         """State constructor for states"""
         self.handler = None
+    
+    def start(self):
+        """to be overriden by child class - should load the level or whatever it needs to load"""
+        pass
     
     def set_handler(self, handler):
         """sets the handler for this state"""
