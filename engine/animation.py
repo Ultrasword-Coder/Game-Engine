@@ -28,6 +28,7 @@ def cache_animations(animation_data: dict):
 REGISTRY_COUNT_ID = 0
 
 def GET_REGISTRY():
+    """Get the Registry"""
     global REGISTRY_COUNT_ID
     REGISTRY_COUNT_ID += 1
     return REGISTRY_COUNT_ID
