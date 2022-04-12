@@ -1,7 +1,7 @@
 import pygame
 
 import engine
-from engine import window, clock, user_input, handler, draw, filehandler, maths
+from engine import window, clock, user_input, handler, draw, filehandler, maths, state, animation
 
 
 
@@ -15,7 +15,8 @@ window.change_framebuffer(1280, 720, pygame.SRCALPHA)
 
 
 # handler object -> # TODO - abstract later 
-HANDLER = handler.Handler()
+HANDLER = state.State()
+state.push_state(HANDLER)
 
 
 

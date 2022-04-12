@@ -7,7 +7,7 @@ State Handling file for engine
 
 """
 
-
+from engine import handler, world
 from collections import deque
 
 
@@ -15,7 +15,29 @@ STATEQUEUE = deque()
 CURRENT = None
 
 
-def push_state(state):
+class State(handler.Handler, world.World):
+    def __init__(self):
+        """
+        State constructor for states
+        
+        Extends off both the Handler and World objects
+        - allows for entity handling
+        - and chunk handling
+        
+        """
+        super().__init__()
+    
+    def start(self) -> None:
+        """to be overriden by child class - should load the level or whatever it needs to load"""
+        pass
+
+    def update(self, dt: float) -> None:
+        """update the state and its handler"""
+        self.render_chunks(rel_center)
+        self.handle_entities(dt)
+
+
+def push_state(state: State) -> None:
     """push a new state onto the state stack"""
     global CURRENT
     state.start()
@@ -23,33 +45,13 @@ def push_state(state):
     STATEQUEUE.append(state)
 
 
-def previous_state(state):
+def previous_state(state: State) -> None:
     """go back go back!"""
     STATEQUEUE.pop()
     global CURRENT
     CURRENT = None
     if STATEQUEUE:
         CURRENT = STATEQUEUE[-1]
-
-
-class State:
-    def __init__(self):
-        """State constructor for states"""
-        self.handler = None
-    
-    def start(self):
-        """to be overriden by child class - should load the level or whatever it needs to load"""
-        pass
-    
-    def set_handler(self, handler):
-        """sets the handler for this state"""
-        self.handler = handler
-
-    def update_state(self, window, dt):
-        """update the state and its handler"""
-        # assume there is a handler object
-        self.handler.handle_entities(window, dt)
-
 
 
 
