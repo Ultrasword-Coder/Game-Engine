@@ -34,9 +34,10 @@ for x in range(CHUNK_WIDTH):
     c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
 
 
-
 # loading sprite sheet
 sheet = spritesheet.SpriteSheet("test/images/tilemap.png", 16, 16, 0, 0)
+
+c.set_tile_at(spritesheet.SpriteTile(5, 5, 1, sheet.get_sprite(12)))
 
 def render_sprite_sheet(sheet):
     """temporary function to render the sprite sheet"""
