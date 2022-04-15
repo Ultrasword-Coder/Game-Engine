@@ -72,22 +72,20 @@ class AnimationRegistry:
 
 # -------------- image loading functions ------------- #
 
-def iterate_load_image_list(base: str, images: list, ext: str = None) -> iter:
+def iterate_load_image_list(base: str, images: list, ext: str = "", pre: str = "") -> iter:
     """Load images and yield them"""
     for img in images:
-        if ext:
-            img += ext
-        print(os.path.join(base, img))
-        yield filehandler.get_image(os.path.join(base, img))
+        # print(os.path.join(base, pre + img + ext))
+        yield filehandler.get_image(os.path.join(base, (pre if pre else "") + img +( ext if ext else "")))
 
 
-def load_image_list(base: str, images: list, ext: str = None)-> list:
+def load_image_list(base: str, images: list, ext: str = "", pre: str = "")-> list:
     """Load images from a list of strings"""
     return list(iterate_load_image_list(base, images, ext=ext))
 
 
 class AnimationHandler:
-    def __init__(self, name: str, images: list, image_sizes: list, fps: int):
+    def __init__(self, json_path: str, name: str, images: list, image_sizes: list, fps: int):
         """
         Animation Handler constructor
         
@@ -99,6 +97,7 @@ class AnimationHandler:
         - frame count: int - number of frames in animation
         """
 
+        self.json_path = json_path
         self.name = name
         self.images = images
         self.image_sizes = image_sizes
@@ -119,7 +118,8 @@ def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
     base_path = data["base_path"]
     image_paths = data["images"]
     fps = data["fps"]
-    ext = data.get("ext")
+    pre = data.get("pre", "")
+    ext = data.get("ext", "")
     sizes = data.get("sizes")
     size = data.get("size")
     
@@ -127,7 +127,7 @@ def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
 
     # load images
     result_images = []
-    for i, result in enumerate(iterate_load_image_list(base_path, image_paths, ext=ext)):
+    for i, result in enumerate(iterate_load_image_list(base_path, image_paths, ext=ext, pre=pre)):
         if dif_sizes:
             # you should index to the right size
             result_images.append(filehandler.scale(result, sizes[i]))
@@ -136,4 +136,4 @@ def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
             result_images.append(filehandler.scale(result, size))
     
     # create animation handler
-    return AnimationHandler(name, result_images, sizes if dif_sizes else [size for i in range(len(image_paths))], fps)
+    return AnimationHandler(json_path, name, result_images, sizes if dif_sizes else [size for i in range(len(image_paths))], fps)

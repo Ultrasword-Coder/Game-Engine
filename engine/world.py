@@ -1,19 +1,8 @@
 import pygame
 from engine import filehandler, window
+from engine.globals import *
 
-
-# chunks will have a set size of 12 x 12
-CHUNK_WIDTH = CHUNK_HEIGHT = 12
-CHUNK_TILE_WIDTH = CHUNK_TILE_HEIGHT = 64
-CHUNK_WIDTH_PIX = CHUNK_WIDTH * CHUNK_TILE_WIDTH
-CHUNK_HEIGHT_PIX = CHUNK_HEIGHT * CHUNK_TILE_HEIGHT
-CHUNK_TILE_AREA = (CHUNK_TILE_WIDTH, CHUNK_TILE_HEIGHT)
-
-TILE_X = 0
-TILE_Y = 1
-TILE_IMG = 2
-TILE_COL = 3
-
+# ---------- chunk ------------ #
 
 class Chunk:
     def __init__(self, pos: tuple):
@@ -43,8 +32,8 @@ class Chunk:
         
         This ensures unecassary calculations are not performed
         """
-        return [x, y, img, 1]
-                        
+        return [x, y, img, collide]
+
     def set_tile_at(self, tile: list) -> None:
         """Set a tile at - get the tile data from Chunk.create_grid_tile()"""
         if not self.images.get(tile[TILE_IMG]):
@@ -67,6 +56,22 @@ class Chunk:
                     # render
                     window.FRAMEBUFFER.blit(self.images[block[TILE_IMG]], (block[TILE_X] + offset[0], block[TILE_Y] + offset[1]))
 
+    def is_collide(self, x: int, y: int, rect) -> bool:
+        """Check if a block is collided with the chunk block"""
+        block = self.tile_map[y][x]
+        if not block[TILE_COL]:
+            return block[TILE_COL]
+        if block[TILE_X] > rect.right:
+            return False
+        if block[TILE_Y] > rect.bottom:
+            return False
+        if block[TILE_X] + CHUNK_TILE_WIDTH < rect.left:
+            return False
+        if block[TILE_Y] + CHUNK_TILE_HEIGHT < rect.top:
+            return False
+        return True
+
+# -------------- world ---------------- #
 
 class World:
     def __init__(self):
@@ -106,4 +111,63 @@ class World:
         """Set render distance"""
         self.r_distance = new
 
+    # --------------- physics part ----------- #
+    def move_object(self, object) -> None:
+        """
+        Move an object using AABB object
+        
+        - should be importing state.py
+        - then calling state.CURRENT.move_object(self)
+        - usually called within the object
+        """
 
+        pos = object.rect.pos
+        area = object.rect.area
+        motion = (round(object.m_motion[0]), round(object.m_motion[1]))
+
+        c_area = (area[0] // CHUNK_WIDTH_PIX, area[1] // CHUNK_HEIGHT_PIX)
+        t_rect = (object.rect.cx, object.rect.cy, object.rect.w // CHUNK_TILE_WIDTH, object.rect.h // CHUNK_TILE_HEIGHT)
+
+        # loop through each chunk
+        chunks = [self.get_chunk(x, y) for x in range(object.rect.cx, object.rect.cx + c_area[0] + 1)
+            for y in range(object.rect.cy, object.rect.cy + c_area[1] + 1) if self.get_chunk(x, y)]
+        
+        # print(chunks)
+
+        # move x
+        object.rect.x += motion[0]
+        for chunk in chunks:
+            # TODO - implement collision handling
+            for xi in range(CHUNK_WIDTH):
+                for yi in range(CHUNK_HEIGHT):
+                    # check if collide
+                    if not chunk.is_collide(xi, yi, object.rect):
+                        continue
+                    # check for motion
+                    if motion[0] > 0:
+                        # moving right
+                        object.rect.x = chunk.tile_map[yi][xi][0] - object.rect.w - 0.1
+                        object.m_motion[0] = 0
+                    elif motion[0] < 0:
+                        # moving left
+                        object.rect.x = chunk.tile_map[yi][xi][0] + CHUNK_TILE_WIDTH + 0.1
+                        object.m_motion[0] = 0
+
+        # move y
+        object.rect.y += motion[1]
+        for chunk in chunks:
+            # check
+            for xi in range(CHUNK_WIDTH):
+                for yi in range(CHUNK_HEIGHT):
+                    # check if collide
+                    if not chunk.is_collide(xi, yi, object.rect):
+                        continue
+                    # check for motion
+                    if motion[1] > 0:
+                        # moving right
+                        object.rect.y = chunk.tile_map[yi][xi][1] - object.rect.h - 0.1
+                        object.m_motion[1] = 0
+                    elif motion[1] < 0:
+                        # moving left
+                        object.rect.y = chunk.tile_map[yi][xi][1] + CHUNK_TILE_HEIGHT + 0.1
+                        object.m_motion[1] = 0    

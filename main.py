@@ -1,9 +1,9 @@
 import pygame
 
 import engine
-from engine import window, clock, user_input, handler, draw, filehandler, maths, state, animation, world
-
-
+from engine import window, clock, user_input, handler, draw
+from engine import filehandler, maths, animation, state, serialize
+from engine.globals import *
 
 background = (255, 255, 255)
 
@@ -20,27 +20,40 @@ state.push_state(HANDLER)
 
 
 # -------- testing ------ #
+data = animation.create_animation_handler_from_json("test/ani/ani.json")
 
-object_data = handler.ObjectData(100, 100, 100, 100)
-
+tile = "test/images/kirb.jpeg"
 c = HANDLER.make_template_chunk(0, 0)
+# for x in range(world.CHUNK_WIDTH):
+#     for y in range(world.CHUNK_HEIGHT):
+#         c.set_tile_at(c.create_grid_tile(x, y, tile))
+for x in range(CHUNK_WIDTH):
+    c.set_tile_at(c.create_grid_tile(x, 7, tile, collide=True))
+for x in range(CHUNK_WIDTH):
+    c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
 
-img = "test/images/kirb.jpeg"
-for x in range(world.CHUNK_WIDTH):
-    for y in range(world.CHUNK_HEIGHT):
-        c.set_tile_at(c.create_grid_tile(x, y, img))
 
 img = filehandler.get_image("test/images/test1.png")
-class test(handler.Object):
+object_data = handler.ObjectData(100, 100, 100, 100)
 
+class test(handler.PersistentObject):
     def __init__(self):
         super().__init__()
         # set params
         object_data.set_object_params(self)
         # image
-        self.image = filehandler.scale(img, self.area)
-    
+        # self.image = filehandler.scale(img, self.area)
+        # animation test
+        self.ani_registry = data.get_registry()
+        self.image = self.ani_registry.get_frame()
+        # set new area
+        self.rect.area = self.ani_registry.frame_dim
+
     def update(self, dt):
+        self.ani_registry.update(dt)
+        if self.ani_registry.changed:
+            self.image = self.ani_registry.get_frame()
+
         # print(dt)
         if user_input.is_key_pressed(pygame.K_a):
             self.m_motion[0] -= 100 * dt
@@ -54,14 +67,13 @@ class test(handler.Object):
         # lerp
         self.m_motion[0] = maths.lerp(self.m_motion[0], 0.0, 0.3)
         self.m_motion[1] = maths.lerp(self.m_motion[1], 0.0, 0.3)
-
-        self.m_pos[0] += self.m_motion[0]
-        self.m_pos[1] += self.m_motion[1]
+        HANDLER.move_object(self)
 
     def render(self):
-        window.draw_buffer(self.image, self.pos)
+        window.draw_buffer(self.image, self.rect.pos)
         # draw some lines facing the direction of the motion
-        c = self.center
+        c = self.rect.center
+        draw.DEBUG_DRAW_LINES(window.get_framebuffer(), (255, 0, 0), True, (self.rect.topleft, self.rect.topright, self.rect.bottomright, self.rect.bottomleft))
         draw.DEBUG_DRAW_LINE(window.get_framebuffer(), (255,0,0), c, (c[0] + self.m_motion[0] * 10, c[1] + self.m_motion[1] * 10), 1)
 
 HANDLER.add_entity_auto(test())
