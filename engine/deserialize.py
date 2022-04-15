@@ -66,7 +66,7 @@ class DeserializeChunk(Deserializable):
 
 
 # ------- Deserialize World -------------- #
-# TODO - implement rest
+# TODO - implement rest #
 
 class DeserializeWorld(Deserializable):
     def __init__(self):

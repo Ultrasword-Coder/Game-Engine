@@ -3,6 +3,7 @@ import pygame
 import engine
 from engine import window, clock, user_input, handler, draw
 from engine import filehandler, maths, animation, state, serialize
+from engine import spritesheet
 from engine.globals import *
 
 background = (255, 255, 255)
@@ -32,6 +33,15 @@ for x in range(CHUNK_WIDTH):
 for x in range(CHUNK_WIDTH):
     c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
 
+
+
+# loading sprite sheet
+sheet = spritesheet.SpriteSheet("test/images/tilemap.png", 16, 16, 0, 0)
+
+def render_sprite_sheet(sheet):
+    """temporary function to render the sprite sheet"""
+    for data in sheet.iterate_images():
+        window.get_framebuffer().blit(data.tex, (data.x, data.y))
 
 img = filehandler.get_image("test/images/test1.png")
 object_data = handler.ObjectData(100, 100, 100, 100)
@@ -90,6 +100,7 @@ while running:
 
     # updates
     HANDLER.update(clock.delta_time)
+    render_sprite_sheet(sheet)
 
     # render
     window.push_buffer((0,0))
