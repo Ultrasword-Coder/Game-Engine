@@ -58,15 +58,15 @@ class Tile:
     y: int
     img: str
     collide: int
-    stats: TileData
+    tilestats: TileData
 
-    def __init__(self, x: int, y: int, img: str, collide: int, tiledata: TileData = None):
+    def __init__(self, x: int, y: int, img: str, collide: int, data: TileData = None):
         """Tile constructor"""
         self.x = x
         self.y = y
         self.img = img
         self.collide = collide
-        self.stats = tiledata
+        self.tilestats = data
 
     def render(self, images: dict, offset: tuple = (0, 0)) -> None:
         """Render function for this tile"""
@@ -89,12 +89,12 @@ class Tile:
     @property
     def stats(self):
         """Get stats"""
-        return self.stats
+        return self.tilestats
     
     @stats.setter
     def stats(self, other):
         """Set Stats"""
-        self.stats = other
+        self.tilestats = other
 
 
 # ---------- chunk ------------ #
@@ -173,6 +173,9 @@ class World:
         
         # args
         self.r_distance = 2
+
+        # physics data
+        self.gravity = 90
         
     def add_chunk(self, chunk: Chunk) -> None:
         """add a chunk to the world"""
@@ -213,10 +216,20 @@ class World:
         - then calling state.CURRENT.move_object(self)
         - usually called within the object
         """
-
+        object.m_moving[0] = False
+        object.m_moving[1] = False
+        p_motion = [round(object.p_motion[0]), round(object.p_motion[1])]
         pos = object.rect.pos
         area = object.rect.area
         motion = (round(object.m_motion[0]), round(object.m_motion[1]))
+
+        if p_motion[0] != motion[0]:
+            object.m_moving[0] = True
+        if p_motion[1] != motion[1]:
+            object.m_moving[1] = True
+
+        object.p_motion[0] = object.m_motion[0]
+        object.p_motion[1] = object.m_motion[1]
 
         c_area = (area[0] // CHUNK_WIDTH_PIX, area[1] // CHUNK_HEIGHT_PIX)
         t_rect = (object.rect.cx, object.rect.cy, object.rect.w // CHUNK_TILE_WIDTH, object.rect.h // CHUNK_TILE_HEIGHT)

@@ -86,7 +86,7 @@ class SpriteTile(Tile):
         """Set the data within the other tile"""
         _tile.img = SPRITE_OBJECT_PREFIX + self.genereate_hash_str()
         _tile.collide = self.collide
-        _tile.extra[SPRITE_OBJECT_KEY] = self.sprite_data
+        _tile.data = self.sprite_data
 
     def genereate_hash_str(self) -> str:
         """Generate a hash string"""
@@ -105,6 +105,7 @@ class SpriteSheet:
 
     def __init__(self, image: str, sprite_width: int, sprite_height: int, x_space: int = 0, y_space: int = 0):
         """Sprite Sheet Constructor"""
+        self.sheet_path = image
         self.sheet = filehandler.get_image(image)
         self.sprites = []
         self.area = self.sheet.get_size()
