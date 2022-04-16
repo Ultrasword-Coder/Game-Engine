@@ -24,7 +24,28 @@ from engine.globals import *
 
 from dataclasses import dataclass
 
-# ---------- tile ------------- #
+
+# ---------------- tile data ----------------
+
+@dataclass(init=False)
+class TileData:
+    """
+    Tile data object
+    - stores stats
+    
+    data:
+    - friction
+    - ...
+    """
+
+    friction: float
+
+    def __init__(self, friction: float):
+        """TileData constructor"""
+        self.friction = friction
+
+
+# ------------------ tile --------------------- #
 
 @dataclass(init=False)
 class Tile:
@@ -37,15 +58,15 @@ class Tile:
     y: int
     img: str
     collide: int
-    extra: dict
+    stats: TileData
 
-    def __init__(self, x: int, y: int, img: str, collide: int):
+    def __init__(self, x: int, y: int, img: str, collide: int, tiledata: TileData = None):
         """Tile constructor"""
         self.x = x
         self.y = y
         self.img = img
         self.collide = collide
-        self.extra = {}
+        self.stats = tiledata
 
     def render(self, images: dict, offset: tuple = (0, 0)) -> None:
         """Render function for this tile"""
@@ -64,6 +85,16 @@ class Tile:
         """Set the data within the other_tile"""
         _tile.img = self.img
         _tile.collide = self.collide
+
+    @property
+    def stats(self):
+        """Get stats"""
+        return self.stats
+    
+    @stats.setter
+    def stats(self, other):
+        """Set Stats"""
+        self.stats = other
 
 
 # ---------- chunk ------------ #
@@ -87,7 +118,7 @@ class Chunk:
         return self.chunk_id
     
     @staticmethod
-    def create_grid_tile(x: int, y: int, img: str, collide: int = 0) -> list:
+    def create_grid_tile(x: int, y: int, img: str, collide: int = 0, data: TileData = None) -> list:
         """
         Create a tile object
         
@@ -97,7 +128,7 @@ class Chunk:
         This ensures unecassary calculations are not performed
         """
         # return [x, y, img, collide]
-        return Tile(x, y, img, collide)
+        return Tile(x, y, img, collide, data=data)
 
     def set_tile_at(self, tile) -> None:
         """Set a tile at - get the tile data from Chunk.create_grid_tile()"""

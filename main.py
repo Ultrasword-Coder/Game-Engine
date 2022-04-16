@@ -20,7 +20,8 @@ HANDLER = state.State()
 state.push_state(HANDLER)
 
 
-# -------- testing ------ #
+# -------------------------------- testing ------------------------------ #
+
 data = animation.create_animation_handler_from_json("test/ani/ani.json")
 
 tile = "test/images/kirb.jpeg"
@@ -89,7 +90,7 @@ class test(handler.PersistentObject):
 
 HANDLER.add_entity_auto(test())
 
-# ----------------------- #
+# ----------------------------------------------------------------------- #
 
 
 clock.start(fps=30)
