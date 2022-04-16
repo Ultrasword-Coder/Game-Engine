@@ -47,26 +47,14 @@ class Serializable:
             file.close()
 
 
-# ------- Serialize tile --------------- #
-
-class SerializeTile(Serializable):
-    def __init__(self):
-        """Serialize Tile constructor"""
-        super().__init__()
-    
-    def serialize(self, tile, images) -> dict:
-        """Serialize a tile given the image map"""
-        pass
-
 # ------- Serialize chunks ------------- #
 
 class SerializeChunk(Serializable):
     def __init__(self):
         """Serialize chunks"""
         super().__init__()
-        self.tile_serializer = SerializeTile()
 
-    def serialize(self, chunk, images) -> dict:
+    def serialize(self, chunk, graphics) -> dict:
         """
         Serialize object
         
@@ -76,10 +64,24 @@ class SerializeChunk(Serializable):
         """
         result = {}
         # tile serializer?
-        result[CHUNK_TILEMAP_KEY] = chunk.tile_map
-        result[CHUNK_POS_KEY] = chunk.pos
-        result[CHUNK_IMAGES_KEY] = {imid: val for imid, val in enumerate(chunk.images.keys())}
+        result[CHUNK_TILEMAP_KEY] = []
+        for iy in range(CHUNK_HEIGHT):
+            result[CHUNK_TILEMAP_KEY].append([])
+            for ix in range(CHUNK_WIDTH):
+                result[CHUNK_TILEMAP_KEY].append(chunk.tile_map[iy][ix].serialize(graphics))
+                graphics[GRAPHICS_IMAGE_KEY].add(chunk.tile_map[iy][ix].img)
+
+        result[CHUNK_POS_KEY] = list(chunk.pos)
+
+        # images
+        # what does imid stand for?
+        # for val in chunk.images.keys():
+        #     # append img string to the list
+        #     graphics[GRAPHICS_IMAGE_KEY].add(val)
+        # result[CHUNK_IMAGES_KEY] = {imid: val for imid, val in enumerate(chunk.images.keys())}
         return result
+
+# DONE DONE DONE DONE DONT GO BACK HERE PLZ BEGONE GO LEAVE NOW NOT SAFE FOR BRAIN
 
 
 # ------- Serialize World -------------- #
@@ -91,7 +93,7 @@ class SerializeWorld(Serializable):
 
         self.chunk_serializer = SerializeChunk()
 
-    def serialize(self, world, images) -> dict:
+    def serialize(self, world, graphics) -> dict:
         """
         Serialize World
 
@@ -100,7 +102,9 @@ class SerializeWorld(Serializable):
             - chunks
         """
         result = {}
-        result[WORLD_CHUNK_KEY] = [self.chunk_serializer.serialize(chunk) for _, chunk in world.chunks.items()]
+        result[WORLD_CHUNK_KEY] = [self.chunk_serializer.serialize(chunk, graphics) for chunk in world.chunks.values()]
+        result[WORLD_RENDER_DISTANCE_KEY] = world.r_distance
+        result[WORLD_GRAVITY_KEY] = world.gravity
         return result
 
 
@@ -131,10 +135,14 @@ class SerializableSpriteSheet:
         super().__init__()
         self.sprite_tile_serializer = SerializeSpriteTile()
     
-    def serialize(self, sprite_sheet, images) -> dict:
+    def serialize(self, sprite_sheet, graphics) -> dict:
         """Serialize the object"""
         result = {}
         result[SPRITESHEET_IMAGE_PATH_KEY] = sprite_sheet.sheet_path
+
+        # add the graphics
+        graphics[GRAPHICS_IMAGE_KEY] = sprite_sheet.sheet_path
+
         result[SPRITESHEET_SPRITES_KEY] = {}
         for tile in sprite_sheet.sprites:
             f = self.sprite_tile_serializer.serialize(tile)
@@ -144,6 +152,7 @@ class SerializableSpriteSheet:
         result[SPRITESHEET_SPACING_KEY] = list(sprite_sheet.spacing)
 
         return result
+
 
 # --------- Serialize Animation --------- #
 
@@ -183,7 +192,8 @@ class SerializeEntity(Serializable):
         result[ENTITY_RECT_KEY] = entity.rect.serialize()
         
         # serialize animation
-        result[ENTITY_ANIMATION_KEY] = None if not entity.ani_registry else entity.ani_registry.handler.name
+        # if there is no animation, None - otherwise return animation name
+        result[ENTITY_ANIMATION_KEY] = None if not entity.ani_registry else entity.ani_registry.handler.json_path
         
         # serialize the entity type
         result[ENTITY_TYPE_KEY] = str(pickle.dumps(type(entity), protocol=4))
@@ -200,7 +210,7 @@ class SerializeHandler(Serializable):
         self.entity_serializer = SerializeEntity()
         self.animation_serializer = SerializeAnimation()
 
-    def serialize(self, handler, images) -> dict:
+    def serialize(self, handler, graphics) -> dict:
         """
         Serialize Handler
         - stores all entity data and serializes it
@@ -211,17 +221,19 @@ class SerializeHandler(Serializable):
         result = {}
         
         # find animations and entities
-        animations = {}
+        # animations = {}
         entities = {}
         for eid, entity in handler.p_objects.items():
             entities[eid] = self.entity_serializer.serialize(entity)
+
             # check if has an ani_registry
             if entity.ani_registry:
-                block = self.animation_serializer.serialize(entity.ani_registry)
-                animations[block[ANIMATION_NAME_KEY]] = block
+                # seriaelize the animation and add to graphics
+                graphics[GRAPHICS_ANIMATION_KEY][entity.ani_registry.handler.json_path] = self.animation_serializer.serialize(entity.ani_registry)
+
 
         result[HANDLER_DATA_KEY] = entities
-        result[HANDLER_ANIMATION_KEY] = animations # TODO - find a place to put animations
+        # result[HANDLER_ANIMATION_KEY] = animations # TODO - find a place to put animations
         return result
 
 
@@ -247,14 +259,21 @@ class SerializeState(Serializable):
         """
         
         result = {}
-        result[STATE_IMAGES_KEY] = {}
+        
+        # create the dict for graphics stuff
+        result[STATE_GRAPHICS_KEY] = {GRAPHICS_IMAGE_KEY: set(), GRAPHICS_ANIMATION_KEY: {}} # dict for now
 
         # get handler data
-        handler_data = self.handler_serializer.serialize(state, result[STATE_IMAGES_KEY])
-        world_data = self.world_serializer.serialize(state, result[STATE_IMAGES_KEY])
+        handler_data = self.handler_serializer.serialize(state, result[STATE_GRAPHICS_KEY])
+        world_data = self.world_serializer.serialize(state, result[STATE_GRAPHICS_KEY])
         
         result[STATE_HANDLER_KEY] = handler_data
         result[STATE_WORLD_KEY] = world_data
+
+        # reset the sets to lists
+        result[STATE_GRAPHICS_KEY][GRAPHICS_IMAGE_KEY] = list(result[STATE_GRAPHICS_KEY][GRAPHICS_IMAGE_KEY])
+        # idk abt this y et
+        # result[STATE_GRAPHICS_KEY][GRAPHICS_ANIMATION_KEY] = 
         return result
 
 

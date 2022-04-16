@@ -90,6 +90,10 @@ class test(handler.PersistentObject):
 
 HANDLER.add_entity_auto(test())
 
+# test serializing
+s = serialize.SerializeState()
+# s.save_to_file("test.json", s.serialize(HANDLER))
+
 # ----------------------------------------------------------------------- #
 
 

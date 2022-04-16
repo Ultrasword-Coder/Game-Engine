@@ -43,7 +43,15 @@ class TileData:
     def __init__(self, friction: float):
         """TileData constructor"""
         self.friction = friction
+    
+    def serialize(self) -> dict:
+        """Serialize this tile data object"""
+        return {TILE_DATA_FRICTION_KEY: self.friction}
 
+    @staticmethod
+    def deserialize(self, data):
+        """Deserialize the data"""
+        result = TileData(float(data[TILE_DATA_FRICTION_KEY]))
 
 # ------------------ tile --------------------- #
 
@@ -52,6 +60,9 @@ class Tile:
     """
     Tile object
     - stores what tiles store ;-;
+
+    x and y are relative to the chunk:
+    - are the x and y index in the chunk.tile_map[y][x]
     """
 
     x: int
@@ -59,6 +70,7 @@ class Tile:
     img: str
     collide: int
     tilestats: TileData
+    data: dict
 
     def __init__(self, x: int, y: int, img: str, collide: int, data: TileData = None):
         """Tile constructor"""
@@ -67,6 +79,7 @@ class Tile:
         self.img = img
         self.collide = collide
         self.tilestats = data
+        self.data = {}
 
     def render(self, images: dict, offset: tuple = (0, 0)) -> None:
         """Render function for this tile"""
@@ -81,11 +94,6 @@ class Tile:
         if not cache.get(self.img):
             cache[self.img] = filehandler.scale(filehandler.get_image(self.img), CHUNK_TILE_AREA)
 
-    def set_tile_with(self, _tile) -> None:
-        """Set the data within the other_tile"""
-        _tile.img = self.img
-        _tile.collide = self.collide
-
     @property
     def stats(self):
         """Get stats"""
@@ -96,6 +104,25 @@ class Tile:
         """Set Stats"""
         self.tilestats = other
 
+    def serialize(self, graphics: dict) -> dict:
+        """Serialize this tile"""
+        result = {}
+
+        result[TILE_X_KEY] = self.x
+        result[TILE_Y_KEY] = self.y
+        result[TILE_IMG_KEY] = self.img
+        result[TILE_COL_KEY] = self.collide
+        if self.tilestats:
+            result[TILE_STATS_KEY] = self.tilestats.serialize()
+        else:
+            result[TILE_STATS_KEY] = None
+
+        return result
+    
+    @staticmethod
+    def deserialize(self, data, graphics: dict):
+        """Deserialize a data block"""
+        return Tile(data[TILE_X_KEY], data[TILE_Y_KEY], data[TILE_IMG_KEY], data[TILE_COL_KEY], data[TILE_STATS_KEY])
 
 # ---------- chunk ------------ #
 
@@ -110,7 +137,7 @@ class Chunk:
         self.images = {}
 
         # visual aspects
-        self.tile_map = tuple(tuple(Chunk.create_grid_tile(x, y, None) for x in range(CHUNK_WIDTH)) for y in range(CHUNK_HEIGHT))
+        self.tile_map = [[Chunk.create_grid_tile(x, y, None) for x in range(CHUNK_WIDTH)] for y in range(CHUNK_HEIGHT)]
 
     @property
     def id(self) -> int:
@@ -134,12 +161,9 @@ class Chunk:
         """Set a tile at - get the tile data from Chunk.create_grid_tile()"""
         tile.cache_image(self.images)
         # get the object in cache
-        block = self.tile_map[tile.y][tile.x]
-        block.x = tile.x * CHUNK_TILE_WIDTH + self.world_pos[0]
-        block.y = tile.y * CHUNK_TILE_HEIGHT + self.world_pos[1]
-
-        # set tile with custom function
-        tile.set_tile_with(block)
+        self.tile_map[tile.y][tile.x] = tile
+        tile.x = tile.x * CHUNK_TILE_WIDTH + self.world_pos[0]
+        tile.y = tile.y * CHUNK_TILE_HEIGHT + self.world_pos[1]
 
     def render(self, offset: tuple = (0, 0)) -> None:
         """Renders all the grid tiles and non tile objects"""

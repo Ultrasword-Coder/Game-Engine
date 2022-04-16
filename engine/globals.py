@@ -25,6 +25,16 @@ RECT_Y_KEY = "y"
 RECT_W_KEY = "w"
 RECT_H_KEY = "h"
 
+TILE_DATA_FRICTION_KEY = "friction"
+# TBD
+TILE_DATA_OTHER_JKEY = "other"
+
+TILE_X_KEY = "x"
+TILE_Y_KEY = "y"
+TILE_IMG_KEY = "img"
+TILE_COL_KEY = "col"
+TILE_STATS_KEY = "stats"
+
 ENTITY_RECT_KEY = "rect"
 ENTITY_ANIMATION_KEY = "animation"
 ENTITY_TYPE_KEY = "type"
@@ -43,10 +53,15 @@ HANDLER_ANIMATION_KEY = "animation"
 
 WORLD_DATA_KEY = "world"
 WORLD_CHUNK_KEY = "chunks"
+WORLD_RENDER_DISTANCE_KEY = "r_dist"
+WORLD_GRAVITY_KEY = "gravity"
 
 STATE_HANDLER_KEY = "handler"
 STATE_WORLD_KEY = "world"
-STATE_IMAGES_KEY  = "images"
+STATE_GRAPHICS_KEY  = "graphics"
+
+GRAPHICS_IMAGE_KEY = "images"
+GRAPHICS_ANIMATION_KEY = "animations"
 
 
 
@@ -55,3 +70,4 @@ STATE_IMAGES_KEY  = "images"
 SPRITE_OBJECT_PREFIX = "spr_o_"
 
 SPRITE_OBJECT_KEY = "sprite"
+SPRITE_OBJECT_IMG_KEY = "img"
