@@ -7,6 +7,8 @@ File for object types in the engine
 from engine.globals import *
 from dataclasses import dataclass
 
+import pickle
+
 @dataclass
 class ObjectData:
     """
@@ -52,12 +54,12 @@ class Rect:
         self.cx = self.x // CHUNK_WIDTH_PIX
         self.cy = self.y // CHUNK_HEIGHT_PIX
 
-    def serialize(self):
+    def serialize(self) -> dict:
         """Convert data to a dict"""
-        return [self.x, self.y, self.w, self.h]
+        return {RECT_X_KEY: self.x, RECT_Y_KEY: self.y, RECT_W_KEY: self.w, RECT_H_KEY: self.h}
     
     @staticmethod
-    def deserialize(self, data):
+    def deserialize(self, data: dict):
         """Deserialize data to create Rect"""
         return Rect(data[RECT_X_KEY], data[RECT_Y_KEY], data[RECT_W_KEY], data[RECT_H_KEY])
 
@@ -174,7 +176,18 @@ class Touching:
     bottom: bool
 
 
-# --------------- objects ---------------- #
+"""
+Objects
+
+- store all object types in a global buffer so they can be called via a key
+"""
+
+OBJECT_TYPE_ACCESS_CONTAINER = {}
+
+def register_object_type(name: str, object_type: type):
+    """Registers the object type"""
+    OBJECT_TYPE_ACCESS_CONTAINER[name] = (object_type, name)
+
 
 ID_COUNTER = 0
 
@@ -191,7 +204,7 @@ class Object:
     Has similar purpose to Persistent Object but acts as a non-persistent object class
     """
 
-    def __init__(self):
+    def __init__(self, object_type_name=REG_OBJECT_KEY):
         """
         Constructor for Object class
         
@@ -204,7 +217,8 @@ class Object:
         """
         # object identification
         self.object_id = 0
-
+        self.object_type = object_type_name
+        
         # standard variables - this is just the object rect 
         self.rect = Rect(0, 0, 0, 0)
         self.ani_registry = None
@@ -249,6 +263,49 @@ class Object:
             if self.ani_registry.changed:
                 self.image = self.ani_registry.get_frame()
 
+    def serialize(self, handler_entity_types: dict) -> dict:
+        """
+        Serialize Object
+
+        - rect
+        - animation registry
+        - entity type
+        
+        - three important steps when making custom serializer
+        1. must serialize rect
+        2. must serialize animatino if has otherwise set to none
+        3. must serialize the object type in hex format using pickle
+        """
+        result = {}
+        result[ENTITY_RECT_KEY] = self.rect.serialize()
+        result[ENTITY_ANIMATION_KEY] = None
+        if self.ani_registry:
+            result[ENTITY_ANIMATION_KEY] = self.ani_registry.serialize()
+        
+        entity_type = self.object_type
+        result[ENTITY_TYPE_KEY] = entity_type
+
+        # store the type in the handler buffer
+        if not handler_entity_types.get(entity_type):
+            # print("[WARNING] handler.py 278 | Set up Entity Component System!")
+
+            # [REMINDER] This is capable of storing both the entity type so we can just call 
+            #       the class and create an instance of the object
+            #       loaded form pickle.load
+
+            #       loading is first:
+            #       decoded = bytes.fromhex(data)
+            #       unpickled = pickle.loads(decoded)
+            #       will be stored as (class, name: str)
+            #       
+            #       object = unpickled[0]() # returns an instance of the object
+            #       
+            #       when deserializing, you should re-register the objects
+            handler_entity_types[entity_type] = pickle.dumps(OBJECT_TYPE_ACCESS_CONTAINER[self.object_type], protocol=PICKLE_DUMP_PROTOCOL).hex()
+        
+        return result
+
+
 
 class PersistentObject(Object):
     """
@@ -264,9 +321,9 @@ class PersistentObject(Object):
     - background effects
     
     """
-    def __init__(self):
+    def __init__(self, object_type_name=REG_P_OBJECT_KEY):
         """ Constructor for Persistent Object class"""
-        super().__init__()
+        super().__init__(object_type_name)
 
 
 # ------------------ handler ------------------ #
@@ -361,6 +418,16 @@ class Handler:
             entity.dirty = True
             entity.render()
 
+    def serialize(self) -> dict:
+        """
+        Serialize the Handler object
+        """
 
+
+"""
+Register the Object and Persistent Object classes
+"""
+register_object_type(REG_OBJECT_KEY, Object)
+register_object_type(REG_P_OBJECT_KEY, PersistentObject)
 
 

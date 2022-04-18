@@ -6,6 +6,8 @@ from engine import filehandler, maths, animation, state, serialize
 from engine import spritesheet
 from engine.globals import *
 
+from objects import test
+
 background = (255, 255, 255)
 
 # create essential instances
@@ -21,8 +23,6 @@ state.push_state(HANDLER)
 
 
 # -------------------------------- testing ------------------------------ #
-
-data = animation.create_animation_handler_from_json("test/ani/ani.json")
 
 tile = "test/images/kirb.jpeg"
 c = HANDLER.make_template_chunk(0, 0)
@@ -46,53 +46,18 @@ def render_sprite_sheet(sheet):
         window.get_framebuffer().blit(data.tex, (data.x, data.y))
 
 img = filehandler.get_image("test/images/test1.png")
+
+data = animation.create_animation_handler_from_json("test/ani/ani.json")
 object_data = handler.ObjectData(100, 100, 100, 100)
 
-class test(handler.PersistentObject):
-    def __init__(self):
-        super().__init__()
-        # set params
-        object_data.set_object_params(self)
-        # image
-        # self.image = filehandler.scale(img, self.area)
-        # animation test
-        self.ani_registry = data.get_registry()
-        self.image = self.ani_registry.get_frame()
-        # set new area
-        self.rect.area = self.ani_registry.frame_dim
 
-    def update(self, dt):
-        self.ani_registry.update(dt)
-        if self.ani_registry.changed:
-            self.image = self.ani_registry.get_frame()
-
-        # print(dt)
-        if user_input.is_key_pressed(pygame.K_a):
-            self.m_motion[0] -= 100 * dt
-        if user_input.is_key_pressed(pygame.K_d):
-            self.m_motion[0] += 100 * dt
-        if user_input.is_key_pressed(pygame.K_w):
-            self.m_motion[1] -= 100 * dt
-        if user_input.is_key_pressed(pygame.K_s):
-            self.m_motion[1] += 100 * dt
-        
-        # lerp
-        self.m_motion[0] = maths.lerp(self.m_motion[0], 0.0, 0.3)
-        self.m_motion[1] = maths.lerp(self.m_motion[1], 0.0, 0.3)
-        HANDLER.move_object(self)
-
-    def render(self):
-        window.draw_buffer(self.image, self.rect.pos)
-        # draw some lines facing the direction of the motion
-        c = self.rect.center
-        draw.DEBUG_DRAW_LINES(window.get_framebuffer(), (255, 0, 0), True, (self.rect.topleft, self.rect.topright, self.rect.bottomright, self.rect.bottomleft))
-        draw.DEBUG_DRAW_LINE(window.get_framebuffer(), (255,0,0), c, (c[0] + self.m_motion[0] * 10, c[1] + self.m_motion[1] * 10), 1)
-
-HANDLER.add_entity_auto(test())
+Test = test.test(data, object_data)
+HANDLER.add_entity_auto(Test)
 
 # test serializing
-s = serialize.SerializeState()
-# s.save_to_file("test.json", s.serialize(HANDLER))
+t = {}
+print(Test.serialize(t))
+print(t)
 
 # ----------------------------------------------------------------------- #
 

@@ -8,7 +8,10 @@ State Handling file for engine
 """
 
 from engine import handler, world
+
 from collections import deque
+import json
+import pickle
 
 
 STATEQUEUE = deque()
@@ -36,6 +39,22 @@ class State(handler.Handler, world.World):
         """update the state and its handler"""
         self.render_chunks(rel_center)
         self.handle_entities(dt)
+    
+    def serialize(self) -> dict:
+        """
+        Serialize the State object
+
+        - stores handler and world data
+        - returns dict
+        """
+        result = {}
+        
+        
+        # serialize handler
+        # serialize world
+
+
+        return result
 
 
 def push_state(state: State) -> None:

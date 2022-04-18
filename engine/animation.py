@@ -1,6 +1,7 @@
 import os
 import json
 from engine import filehandler
+from engine.globals import *
 
 
 ANIMATION_NAME = "name"
@@ -69,6 +70,24 @@ class AnimationRegistry:
         """Get the current frame"""
         return self.handler.images[self.frame]
 
+    def serialize(self) -> dict:
+        """
+        Serialize Animation Registry
+
+        - store the animatin registry key
+        """
+        result = {}
+        result[ANIMATION_PATH_KEY] = self.handler.json_path
+        result[ANIMATION_NAME_KEY] = self.handler.name
+        return result
+    
+    def deserialize(self, data: dict):
+        """
+        Deserialize Animation Registry
+
+        - get data, decode, ez
+        """
+        print("Implement Deserializaetion for Animatino Registry please")
 
 # -------------- image loading functions ------------- #
 

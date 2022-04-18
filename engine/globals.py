@@ -12,10 +12,19 @@ TILE_COL = 3
 
 
 
+"""
+Basically, each object has a serialize and deserialize method
+
+World and Handler was serialize_world and serialize_handler respectively for both
+serialization and deserialization
+
+"""
+
 # serialization
+PICKLE_DUMP_PROTOCOL = 4
+
 CHUNK_TILEMAP_KEY = "tile"
 CHUNK_POS_KEY = "pos"
-CHUNK_IMAGES_KEY = "images"
 
 ANIMATION_PATH_KEY = "a_path"
 ANIMATION_NAME_KEY = "a_name"
@@ -51,18 +60,12 @@ SPRITESHEET_SPACING_KEY = "s_spacing"
 HANDLER_DATA_KEY = "entities"
 HANDLER_ANIMATION_KEY = "animation"
 
-WORLD_DATA_KEY = "world"
 WORLD_CHUNK_KEY = "chunks"
 WORLD_RENDER_DISTANCE_KEY = "r_dist"
 WORLD_GRAVITY_KEY = "gravity"
 
 STATE_HANDLER_KEY = "handler"
 STATE_WORLD_KEY = "world"
-STATE_GRAPHICS_KEY  = "graphics"
-
-GRAPHICS_IMAGE_KEY = "images"
-GRAPHICS_ANIMATION_KEY = "animations"
-
 
 
 # world rendering
@@ -71,3 +74,11 @@ SPRITE_OBJECT_PREFIX = "spr_o_"
 
 SPRITE_OBJECT_KEY = "sprite"
 SPRITE_OBJECT_IMG_KEY = "img"
+
+
+"""
+Registered Object Names
+"""
+
+REG_OBJECT_KEY = "object"
+REG_P_OBJECT_KEY = "p_object"

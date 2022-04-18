@@ -49,7 +49,7 @@ class TileData:
         return {TILE_DATA_FRICTION_KEY: self.friction}
 
     @staticmethod
-    def deserialize(self, data):
+    def deserialize(data):
         """Deserialize the data"""
         result = TileData(float(data[TILE_DATA_FRICTION_KEY]))
 
@@ -104,10 +104,9 @@ class Tile:
         """Set Stats"""
         self.tilestats = other
 
-    def serialize(self, graphics: dict) -> dict:
+    def serialize(self) -> dict:
         """Serialize this tile"""
         result = {}
-
         result[TILE_X_KEY] = self.x
         result[TILE_Y_KEY] = self.y
         result[TILE_IMG_KEY] = self.img
@@ -116,11 +115,13 @@ class Tile:
             result[TILE_STATS_KEY] = self.tilestats.serialize()
         else:
             result[TILE_STATS_KEY] = None
-
+        
+        # add img
+        graphics[GRAPHICS_IMAGE_KEY].add(self.img)
         return result
     
     @staticmethod
-    def deserialize(self, data, graphics: dict):
+    def deserialize(data):
         """Deserialize a data block"""
         return Tile(data[TILE_X_KEY], data[TILE_Y_KEY], data[TILE_IMG_KEY], data[TILE_COL_KEY], data[TILE_STATS_KEY])
 
@@ -187,6 +188,48 @@ class Chunk:
             return False
         return True
 
+    def serialize(self) -> dict:
+        """
+        Serialize chunk
+        
+        Only two parts, the tiles and the position
+        - images are stored in graphics
+        - iterate through each tile and call serialize method
+        - then ez dubs
+        """
+        result = {}
+        result[CHUNK_TILEMAP_KEY] = []
+        for y in range(CHUNK_HEIGHT):
+            result[CHUNK_TILEMAP_KEY].append([])
+            for x in range(CHUNK_WIDTH):
+                result[CHUNK_TILEMAP_KEY][y].append(self.tile_map[y][x].serialize())
+        result[CHUNK_POS_KEY] = list(self.pos)
+
+        return result
+    
+    @staticmethod
+    def deserialize(data: dict):
+        """
+        Deserialize the Chunk object
+
+        - take in dict
+        - decode to get the 
+            - tiles
+            - position
+        """
+        position = data[CHUNK_POS_KEY]
+        tile_data = data[CHUNK_TILEMAP_KEY]
+
+        result = Chunk(position)
+        for y in range(CHUNK_HEIGHT):
+            for x in range(CHUNK_WIDTH):
+                # get tile and deserialize
+                tile = Tile.deserialize(tile_data[y][x])
+                # set tile
+                result.set_tile_at(tile)
+        
+        return result
+
 
 # -------------- world ---------------- #
 
@@ -230,6 +273,47 @@ class World:
     def render_distance(self, new: int) -> int:
         """Set render distance"""
         self.r_distance = new
+
+    # --------------- serialize + deserialize ------------ #
+
+    def serialize_world(self) -> dict:
+        """
+        Deserialize World
+
+        Takes each chunk and serializes the chunk
+        - store chunk data into an array
+        - chunks should also store the required graphics
+        """
+        
+        result = {}
+        
+        # serialize chunks
+        result[WORLD_CHUNK_KEY] = []
+        for chunk_id, chunk in self.chunks.items():
+            result[WORLD_CHUNK_KEY].append(chunk.serialize())
+        
+        # serialize render distance and gravity
+        result[WORLD_RENDER_DISTANCE_KEY] = self.r_distance
+        result[WORLD_GRAVITY_KEY] = self.gravity
+
+        return result
+    
+    @staticmethod
+    def deserialize_world(self, data: dict):
+        """
+        Deserialize world
+
+        Take the given data and creates a world object
+        """
+        result = World()
+        # deserialize render distance and gravity
+        result.r_distance = data[WORLD_RENDER_DISTANCE_KEY]
+        result.gravity = data[WORLD_GRAVITY_KEY]
+        # deserialize world data / chunks
+        for chunk in data[WORLD_CHUNK_KEY]:
+            result.add_chunk(Chunk.deserialize(chunk))
+        
+        return result
 
     # --------------- physics part ----------- #
     def move_object(self, object) -> None:
