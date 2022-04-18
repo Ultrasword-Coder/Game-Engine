@@ -117,7 +117,7 @@ class Tile:
             result[TILE_STATS_KEY] = None
         
         # add img
-        graphics[GRAPHICS_IMAGE_KEY].add(self.img)
+        # graphics[GRAPHICS_IMAGE_KEY].add(self.img)
         return result
     
     @staticmethod

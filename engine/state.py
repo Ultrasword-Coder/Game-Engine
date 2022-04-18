@@ -8,6 +8,7 @@ State Handling file for engine
 """
 
 from engine import handler, world
+from engine.globals import *
 
 from collections import deque
 import json
@@ -49,10 +50,13 @@ class State(handler.Handler, world.World):
         """
         result = {}
         
-        
         # serialize handler
+        handler = self.serialize_handler()
         # serialize world
+        world = self.serialize_world()
 
+        result[STATE_HANDLER_KEY] = handler
+        result[STATE_WORLD_KEY] = world
 
         return result
 

@@ -59,7 +59,7 @@ class Rect:
         return {RECT_X_KEY: self.x, RECT_Y_KEY: self.y, RECT_W_KEY: self.w, RECT_H_KEY: self.h}
     
     @staticmethod
-    def deserialize(self, data: dict):
+    def deserialize(data: dict):
         """Deserialize data to create Rect"""
         return Rect(data[RECT_X_KEY], data[RECT_Y_KEY], data[RECT_W_KEY], data[RECT_H_KEY])
 
@@ -229,6 +229,17 @@ class Object:
         self.m_moving = [False, False]
         self.touching = Touching(False, False, False, False)
 
+        # custom data
+        self.data = {}
+    
+    def start(self):
+        """Default start method"""
+        pass
+
+    def setup_data(self, data: dict):
+        """Setup data default method"""
+        pass
+
     @property
     def id(self):
         """Get the object id"""
@@ -285,6 +296,9 @@ class Object:
         entity_type = self.object_type
         result[ENTITY_TYPE_KEY] = entity_type
 
+        # set entity data
+        result[ENTITY_DATA_KEY] = self.data
+
         # store the type in the handler buffer
         if not handler_entity_types.get(entity_type):
             # print("[WARNING] handler.py 278 | Set up Entity Component System!")
@@ -304,7 +318,27 @@ class Object:
             handler_entity_types[entity_type] = pickle.dumps(OBJECT_TYPE_ACCESS_CONTAINER[self.object_type], protocol=PICKLE_DUMP_PROTOCOL).hex()
         
         return result
+    
+    @classmethod
+    def deserialize(data: dict, handler_entity_types: dict):
+        """
+        Deserialize an object
+        
+        1. get the entity classtype
+        2. give it data
+        3. return object
+        """
+        e_type = handler_entity_types[data[ENTITY_TYPE_KEY]]        # is a dict
+        # create object
+        result = e_type[0]()
+        # rect
+        result.rect = Rect.deserialize(data[ENTITY_RECT_KEY])
+        # animation
+        result.ani_registry = animation.create_animation_handler_from_json(data[ENTITY_ANIMATION_KEY]).get_registry()
+        # set variables
+        result.setup_data(data[ENTITY_DATA_KEY])
 
+        return result
 
 
 class PersistentObject(Object):
@@ -418,10 +452,18 @@ class Handler:
             entity.dirty = True
             entity.render()
 
-    def serialize(self) -> dict:
+    def serialize_handler(self) -> dict:
         """
         Serialize the Handler object
         """
+        result = {}
+        result[HANDLER_ENTITY_TYPES_KEY] = {}
+        result[HANDLER_ENTITIES_KEY] = []
+        for oid, obj in self.p_objects.items():
+            result[HANDLER_ENTITIES_KEY].append(obj.serialize(result[HANDLER_ENTITY_TYPES_KEY]))
+        
+        # return
+        return result
 
 
 """

@@ -56,8 +56,8 @@ HANDLER.add_entity_auto(Test)
 
 # test serializing
 t = {}
-print(Test.serialize(t))
-print(t)
+
+serialize.save_to_file("test.json", HANDLER.serialize())
 
 # ----------------------------------------------------------------------- #
 

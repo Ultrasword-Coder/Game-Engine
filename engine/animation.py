@@ -130,6 +130,12 @@ class AnimationHandler:
 
 def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
     """Create an animatino handler object from json file"""
+    # check if already opened
+    global animation_handler_cache
+    if animation_handler_cache.get(json_path):
+        return animation_handler_cache[json_path]
+
+    # cont
     with open(json_path, 'r') as file:
         data = json.load(file)
         file.close()
@@ -155,4 +161,6 @@ def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
             result_images.append(filehandler.scale(result, size))
     
     # create animation handler
-    return AnimationHandler(json_path, name, result_images, sizes if dif_sizes else [size for i in range(len(image_paths))], fps)
+    r = AnimationHandler(json_path, name, result_images, sizes if dif_sizes else [size for i in range(len(image_paths))], fps)
+    animation_handler_cache[json_path] = r
+    return r
