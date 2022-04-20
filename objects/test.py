@@ -4,16 +4,14 @@ from engine import handler, user_input, state, window, draw, maths
 
 class test(handler.PersistentObject):
     object_type_name = "test"
-    def __init__(self, data, object_data):
+
+    def __init__(self):
         super().__init__(self.object_type_name)
-        # set params
-        object_data.set_object_params(self)
-        # image
-        # self.image = filehandler.scale(img, self.area)
-        # animation test
-        self.ani_registry = data.get_registry()
+    
+    def start(self):
+        """Start method"""
+        # should have already set ani_registry
         self.image = self.ani_registry.get_frame()
-        # set new area
         self.rect.area = self.ani_registry.frame_dim
 
     def update(self, dt):

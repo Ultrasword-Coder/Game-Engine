@@ -18,46 +18,50 @@ window.change_framebuffer(1280, 720, pygame.SRCALPHA)
 
 
 # handler object -> # TODO - abstract later 
-HANDLER = state.State()
+# HANDLER = state.State()
+# state.push_state(HANDLER)
+HANDLER = state.State.deserialize(serialize.load_json_data("test.json"))
 state.push_state(HANDLER)
 
 
 # -------------------------------- testing ------------------------------ #
-
-tile = "test/images/kirb.jpeg"
-c = HANDLER.make_template_chunk(0, 0)
-# for x in range(world.CHUNK_WIDTH):
-#     for y in range(world.CHUNK_HEIGHT):
-#         c.set_tile_at(c.create_grid_tile(x, y, tile))
-for x in range(CHUNK_WIDTH):
-    c.set_tile_at(c.create_grid_tile(x, 7, tile, collide=True))
-for x in range(CHUNK_WIDTH):
-    c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
-
-
 # loading sprite sheet
 sheet = spritesheet.SpriteSheet("test/images/tilemap.png", 16, 16, 0, 0)
-
-c.set_tile_at(spritesheet.SpriteTile(5, 5, 1, sheet.get_sprite(12)))
-
 def render_sprite_sheet(sheet):
     """temporary function to render the sprite sheet"""
     for data in sheet.iterate_images():
         window.get_framebuffer().blit(data.tex, (data.x, data.y))
 
-img = filehandler.get_image("test/images/test1.png")
-
-data = animation.create_animation_handler_from_json("test/ani/ani.json")
-object_data = handler.ObjectData(100, 100, 100, 100)
 
 
-Test = test.test(data, object_data)
-HANDLER.add_entity_auto(Test)
+# tile = "test/images/kirb.jpeg"
+# c = HANDLER.make_template_chunk(0, 0)
+# # for x in range(world.CHUNK_WIDTH):
+# #     for y in range(world.CHUNK_HEIGHT):
+# #         c.set_tile_at(c.create_grid_tile(x, y, tile))
+# for x in range(CHUNK_WIDTH):
+#     c.set_tile_at(c.create_grid_tile(x, 7, tile, collide=True))
+# for x in range(CHUNK_WIDTH):
+#     c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
 
-# test serializing
-t = {}
 
-serialize.save_to_file("test.json", HANDLER.serialize())
+# c.set_tile_at(spritesheet.SpriteTile(5, 5, 1, sheet.get_sprite(12)))
+
+
+# img = filehandler.get_image("test/images/test1.png")
+
+# data = animation.create_animation_handler_from_json("test/ani/ani.json")
+# object_data = handler.ObjectData(100, 100, 100, 100)
+
+
+# Test = test.test()
+# Test.animation = data.get_registry()
+# object_data.set_object_params(Test)
+
+# HANDLER.add_entity_auto(Test)
+
+# serialize.save_to_file("test.json", HANDLER.serialize())
+
 
 # ----------------------------------------------------------------------- #
 

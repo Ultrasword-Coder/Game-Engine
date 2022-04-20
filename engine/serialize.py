@@ -37,3 +37,10 @@ def save_to_file(file_path: str, data: dict) -> None:
         json.dump(data, file) # indent=4)
         file.close()
 
+
+def load_json_data(file_path: str) -> dict:
+    """Open file and load as a json"""
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+        file.close()
+    return data

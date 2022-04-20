@@ -51,12 +51,36 @@ class State(handler.Handler, world.World):
         result = {}
         
         # serialize handler
-        handler = self.serialize_handler()
+        h = self.serialize_handler()
         # serialize world
-        world = self.serialize_world()
+        w = self.serialize_world()
 
-        result[STATE_HANDLER_KEY] = handler
-        result[STATE_WORLD_KEY] = world
+        result[STATE_HANDLER_KEY] = h
+        result[STATE_WORLD_KEY] = w
+
+        return result
+    
+    @staticmethod
+    def deserialize(data: dict):
+        """
+        Deserialize the State Object
+
+        - deserialize world and handler
+        """
+        result = State()
+
+        w = world.World.deserialize_world(data[STATE_WORLD_KEY])
+        h = handler.Handler.deserialize_handler(data[STATE_HANDLER_KEY])
+
+        # continue
+        # ---
+        # set variables
+        result.chunks = w.chunks
+        result.r_distance = w.r_distance
+        result.gravity = w.gravity
+
+        result.p_objects = h.p_objects
+        result.objects = h.objects
 
         return result
 

@@ -4,6 +4,7 @@ File for object types in the engine
 
 # ---------------- dataclass --------------- #
 
+from engine import animation
 from engine.globals import *
 from dataclasses import dataclass
 
@@ -218,6 +219,7 @@ class Object:
         # object identification
         self.object_id = 0
         self.object_type = object_type_name
+        self.string_identifier = ""
         
         # standard variables - this is just the object rect 
         self.rect = Rect(0, 0, 0, 0)
@@ -289,6 +291,7 @@ class Object:
         """
         result = {}
         result[ENTITY_RECT_KEY] = self.rect.serialize()
+        result[ENTITY_STRING_IDENTIFIER_KEY] = self.string_identifier
         result[ENTITY_ANIMATION_KEY] = None
         if self.ani_registry:
             result[ENTITY_ANIMATION_KEY] = self.ani_registry.serialize()
@@ -319,8 +322,8 @@ class Object:
         
         return result
     
-    @classmethod
-    def deserialize(data: dict, handler_entity_types: dict):
+    @staticmethod
+    def deserialize(data: dict):
         """
         Deserialize an object
         
@@ -328,13 +331,14 @@ class Object:
         2. give it data
         3. return object
         """
-        e_type = handler_entity_types[data[ENTITY_TYPE_KEY]]        # is a dict
+        e_type = OBJECT_TYPE_ACCESS_CONTAINER[data[ENTITY_TYPE_KEY]]        # is a dict
         # create object
         result = e_type[0]()
+        result.string_identifier = data[ENTITY_STRING_IDENTIFIER_KEY]
         # rect
         result.rect = Rect.deserialize(data[ENTITY_RECT_KEY])
         # animation
-        result.ani_registry = animation.create_animation_handler_from_json(data[ENTITY_ANIMATION_KEY]).get_registry()
+        result.ani_registry = animation.AnimationHandler.deserialize(data[ENTITY_ANIMATION_KEY]).get_registry()
         # set variables
         result.setup_data(data[ENTITY_DATA_KEY])
 
@@ -398,11 +402,13 @@ class Handler:
     def add_persist_entity(self, entity):
         """Add persistent entity"""
         entity.object_id = get_object_id()
+        entity.start()
         self.p_objects[entity.id] = entity
     
     def add_non_persist_entity(self, entity):
         """Add non-persisting entity"""
         entity.object_id = self.get_non_persist_id()
+        entity.start()
         self.objects[entity.id] = entity
     
     def add_entity_auto(self, entity):
@@ -463,6 +469,30 @@ class Handler:
             result[HANDLER_ENTITIES_KEY].append(obj.serialize(result[HANDLER_ENTITY_TYPES_KEY]))
         
         # return
+        return result
+    
+    @staticmethod
+    def deserialize_handler(data: dict):
+        """
+        Deserialize a handler object
+        
+        - deserialize handler object given the data
+        """
+        result = Handler()
+        entity_types = {}
+        for entity_type, encoded_bytes in data[HANDLER_ENTITY_TYPES_KEY].items():
+            # decode the data - to a tuple
+            decoded = bytes.fromhex(encoded_bytes)
+            unpickled = pickle.loads(decoded)
+            # add to the global object type access container
+            OBJECT_TYPE_ACCESS_CONTAINER[entity_type] = unpickled
+        
+        # now that all object types are loaded
+        # load the entities
+        for entity in data[HANDLER_ENTITIES_KEY]:
+            result.add_persist_entity(Object.deserialize(entity))
+        
+        # return 
         return result
 
 

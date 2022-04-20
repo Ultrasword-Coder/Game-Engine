@@ -80,14 +80,6 @@ class AnimationRegistry:
         result[ANIMATION_PATH_KEY] = self.handler.json_path
         result[ANIMATION_NAME_KEY] = self.handler.name
         return result
-    
-    def deserialize(self, data: dict):
-        """
-        Deserialize Animation Registry
-
-        - get data, decode, ez
-        """
-        print("Implement Deserializaetion for Animatino Registry please")
 
 # -------------- image loading functions ------------- #
 
@@ -127,6 +119,15 @@ class AnimationHandler:
         """Register a registry to this animation handler"""
         return AnimationRegistry(self)
 
+    @staticmethod
+    def deserialize(data: dict):
+        """
+        Deserialize Animation Registry
+
+        - get data, decode, ez
+        """
+        return create_animation_handler_from_json(data[ANIMATION_PATH_KEY])
+        # print("Implement Deserializaetion for Animatino Registry please")
 
 def create_animation_handler_from_json(json_path: str) -> AnimationHandler:
     """Create an animatino handler object from json file"""

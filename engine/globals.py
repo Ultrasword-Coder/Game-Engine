@@ -43,11 +43,14 @@ TILE_Y_KEY = "y"
 TILE_IMG_KEY = "img"
 TILE_COL_KEY = "col"
 TILE_STATS_KEY = "stats"
+TILE_TYPE_KEY = "type"
+TILE_EXTRA_DATA_KEY = "extra"
 
 ENTITY_RECT_KEY = "rect"
 ENTITY_ANIMATION_KEY = "animation"
 ENTITY_TYPE_KEY = "type"
 ENTITY_DATA_KEY = "data"
+ENTITY_STRING_IDENTIFIER_KEY = "identifier"
 
 SPRITETILE_INDEX_KEY = "index"
 SPRITETILE_RECT_KEY = "rect"
@@ -64,6 +67,7 @@ HANDLER_ENTITY_TYPES_KEY = "etypes"
 WORLD_CHUNK_KEY = "chunks"
 WORLD_RENDER_DISTANCE_KEY = "r_dist"
 WORLD_GRAVITY_KEY = "gravity"
+WORLD_TILE_TYPES = "tiletypes"
 
 STATE_HANDLER_KEY = "handler"
 STATE_WORLD_KEY = "world"
@@ -75,6 +79,12 @@ SPRITE_OBJECT_PREFIX = "spr_o_"
 
 SPRITE_OBJECT_KEY = "sprite"
 SPRITE_OBJECT_IMG_KEY = "img"
+
+# sprite sheet stuffs
+
+SPRITETILE_SHEET_KEY = "sheet"
+SPRITETILE_SHEET_INDEX_KEY = "index"
+SPRITETILE_SHEET_DATA_KEY = "data"
 
 
 """

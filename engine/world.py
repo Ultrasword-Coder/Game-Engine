@@ -19,10 +19,21 @@ What an amazing file; we have so much cool stuff!
 
 
 import pygame
+import pickle
 from engine import filehandler, window
 from engine.globals import *
 
 from dataclasses import dataclass
+
+
+# TODO - tile object type thing
+
+TILE_TYPE_ACCESS_CONTAINER = {}
+
+def register_tile_type(name: str, tile_type: type):
+    """Registers the object type"""
+    TILE_TYPE_ACCESS_CONTAINER[name] = (tile_type, name)
+
 
 
 # ---------------- tile data ----------------
@@ -51,7 +62,11 @@ class TileData:
     @staticmethod
     def deserialize(data):
         """Deserialize the data"""
+        if not data:
+            return False
         result = TileData(float(data[TILE_DATA_FRICTION_KEY]))
+        
+        return result
 
 # ------------------ tile --------------------- #
 
@@ -70,7 +85,12 @@ class Tile:
     img: str
     collide: int
     tilestats: TileData
+
+    # this is important for sprite tiles
     data: dict
+    
+    # class variable
+    tile_type: str = "tile"
 
     def __init__(self, x: int, y: int, img: str, collide: int, data: TileData = None):
         """Tile constructor"""
@@ -91,6 +111,8 @@ class Tile:
     
     def cache_image(self, cache) -> None:
         """Cache the image"""
+        if not self.img:
+            return
         if not cache.get(self.img):
             cache[self.img] = filehandler.scale(filehandler.get_image(self.img), CHUNK_TILE_AREA)
 
@@ -104,18 +126,19 @@ class Tile:
         """Set Stats"""
         self.tilestats = other
 
-    def serialize(self) -> dict:
+    def serialize(self, parent_pos: tuple) -> dict:
         """Serialize this tile"""
         result = {}
-        result[TILE_X_KEY] = self.x
-        result[TILE_Y_KEY] = self.y
+        result[TILE_X_KEY] = (self.x - parent_pos[0]) // CHUNK_TILE_WIDTH
+        result[TILE_Y_KEY] = (self.y - parent_pos[1]) // CHUNK_TILE_HEIGHT
         result[TILE_IMG_KEY] = self.img
         result[TILE_COL_KEY] = self.collide
         if self.tilestats:
             result[TILE_STATS_KEY] = self.tilestats.serialize()
         else:
             result[TILE_STATS_KEY] = None
-        
+        result[TILE_TYPE_KEY] = self.tile_type
+        result[TILE_EXTRA_DATA_KEY] = self.data
         # add img
         # graphics[GRAPHICS_IMAGE_KEY].add(self.img)
         return result
@@ -123,7 +146,13 @@ class Tile:
     @staticmethod
     def deserialize(data):
         """Deserialize a data block"""
-        return Tile(data[TILE_X_KEY], data[TILE_Y_KEY], data[TILE_IMG_KEY], data[TILE_COL_KEY], data[TILE_STATS_KEY])
+        # get the type
+        tile_name = data[TILE_TYPE_KEY]
+        tile_type = TILE_TYPE_ACCESS_CONTAINER[tile_name][0]
+        if tile_name == Tile.tile_type:
+            return tile_type(int(data[TILE_X_KEY]), int(data[TILE_Y_KEY]), data[TILE_IMG_KEY], data[TILE_COL_KEY], TileData.deserialize(data[TILE_STATS_KEY]))
+        else:
+            return tile_type.deserialize(data)
 
 # ---------- chunk ------------ #
 
@@ -202,7 +231,7 @@ class Chunk:
         for y in range(CHUNK_HEIGHT):
             result[CHUNK_TILEMAP_KEY].append([])
             for x in range(CHUNK_WIDTH):
-                result[CHUNK_TILEMAP_KEY][y].append(self.tile_map[y][x].serialize())
+                result[CHUNK_TILEMAP_KEY][y].append(self.tile_map[y][x].serialize(self.world_pos))
         result[CHUNK_POS_KEY] = list(self.pos)
 
         return result
@@ -296,10 +325,16 @@ class World:
         result[WORLD_RENDER_DISTANCE_KEY] = self.r_distance
         result[WORLD_GRAVITY_KEY] = self.gravity
 
+        # save all tile types as well
+        tt = {}
+        for tile_name, tile_data in TILE_TYPE_ACCESS_CONTAINER.items():
+            tt[tile_name] = pickle.dumps(TILE_TYPE_ACCESS_CONTAINER[tile_name], protocol=PICKLE_DUMP_PROTOCOL).hex()
+        result[WORLD_TILE_TYPES] = tt
+
         return result
     
     @staticmethod
-    def deserialize_world(self, data: dict):
+    def deserialize_world(data: dict):
         """
         Deserialize world
 
@@ -309,6 +344,14 @@ class World:
         # deserialize render distance and gravity
         result.r_distance = data[WORLD_RENDER_DISTANCE_KEY]
         result.gravity = data[WORLD_GRAVITY_KEY]
+        # load all tile types
+        for tile_name, encoded_bytes in data[WORLD_TILE_TYPES].items():
+            # decode the data - to a tuple
+            decoded = bytes.fromhex(encoded_bytes)
+            unpickled = pickle.loads(decoded)
+            # add to the global object type access container
+            TILE_TYPE_ACCESS_CONTAINER[tile_name] = unpickled
+
         # deserialize world data / chunks
         for chunk in data[WORLD_CHUNK_KEY]:
             result.add_chunk(Chunk.deserialize(chunk))
@@ -385,3 +428,8 @@ class World:
                         # moving left
                         object.rect.y = chunk.tile_map[yi][xi].y + CHUNK_TILE_HEIGHT + 0.1
                         object.m_motion[1] = 0    
+
+
+# ------- register the tile type ---------- #
+register_tile_type(Tile.tile_type, Tile)
+

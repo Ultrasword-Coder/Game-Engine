@@ -9,9 +9,17 @@ create spritesheet
 
 
 from engine import filehandler, window
-from engine.world import Tile
+from engine.world import Tile, register_tile_type
 from engine.globals import *
 from dataclasses import dataclass
+
+# ------------ all loaded sprite sheets thing ----------- #
+
+SPRITE_SHEETS_CONTAINER = {}
+
+def register_sprite_sheet(sprite_sheet_name, sprite_sheet_object):
+    """Register the sprite sheet object to global sprite sheet cache"""
+    SPRITE_SHEETS_CONTAINER[sprite_sheet_name] = sprite_sheet_object
 
 
 # ------------ SpriteData ----------------- #
@@ -33,8 +41,8 @@ class SpriteData:
     w: int
     h: int
 
-    tex: filehandler.pygame.Surface
-    parent_str: str = None
+    # not actually an int
+    parent_object: int
 
     def __init__(self, index: int, x: int, y: int, w: int, h: int, tex):
         """Sprite data constructor"""
@@ -44,6 +52,10 @@ class SpriteData:
         self.w = w
         self.h = h
         self.tex = tex
+    
+    def get_area(self) -> list:
+        """Return a list for the area that the sprite tile takes up in the spritesheet"""
+        return [self.x, self.y, self.w, self.h]
 
 
 # ------------- SpriteTile ----------------- #
@@ -69,13 +81,22 @@ class SpriteTile(Tile):
     sprite_data: SpriteData
     sprite_hashed_name: str
 
+    tile_type: str = "sprite_tile"
+
     def __init__(self, x: int, y: int, collide: int, sprite_data):
         """Sprite Tile constructor"""
         super().__init__(x, y, None, collide)
 
         self.sprite_data = sprite_data
         self.sprite_hashed_name = self.genereate_hash_str()
-        self.img = self.sprite_data.parent_str
+        self.img = self.sprite_data.parent_object.sheet_path
+        self.tile_type = "sprite_tile"
+
+        # set private variables
+        self.data[SPRITETILE_SHEET_KEY] = sprite_data.parent_object.sheet_path
+        self.data[SPRITETILE_SHEET_DATA_KEY] = sprite_data.parent_object.get_data()# an array of length 3
+        self.data[SPRITETILE_SHEET_INDEX_KEY] = sprite_data.index
+
 
     def render(self, images: dict, offset: tuple = (0, 0)) -> None:
         """Render function for this sprite tile"""
@@ -89,8 +110,27 @@ class SpriteTile(Tile):
 
     def genereate_hash_str(self) -> str:
         """Generate a hash string"""
-        return f"{self.sprite_data.parent_str}-{self.sprite_data.index}"
+        return f"{self.sprite_data.parent_object.sheet_path}-{self.sprite_data.index}"
 
+    @staticmethod
+    def deserialize(data: dict):
+        """
+        Deserialize method for Sprite Tiles
+        """
+        # check if loaded already
+        extra = data[TILE_EXTRA_DATA_KEY]
+        path = extra[SPRITETILE_SHEET_KEY]
+        index = extra[SPRITETILE_SHEET_INDEX_KEY]
+        stats = extra[SPRITETILE_SHEET_DATA_KEY] # contains the path , spacing , and sprite area
+        if not SPRITE_SHEETS_CONTAINER.get(path):
+            # if not, then load it
+            SpriteSheet(path, stats[2][0], stats[2][1], stats[1][0], stats[1][1])
+        
+        # get the sprite sheet
+        sheet = SPRITE_SHEETS_CONTAINER[path]
+        
+        result = SpriteTile(data[TILE_X_KEY], data[TILE_Y_KEY], data[TILE_COL_KEY], sheet.get_sprite(index))
+        return result
 
 # ------------- SpriteSheet ----------------- #
 
@@ -117,6 +157,8 @@ class SpriteSheet:
         # load the images
         self.create()
 
+        register_sprite_sheet(self.sheet_path, self)
+
     def create(self):
         """Create spritesheet"""
         left = self.spacing[0]
@@ -128,7 +170,7 @@ class SpriteSheet:
             new_img = filehandler.make_surface(self.sprite_area[0], self.sprite_area[1], filehandler.SRC_ALPHA)
             filehandler.crop_image(self.sheet, new_img, (left, top, left + self.sprite_area[0], top + self.sprite_area[1]))
             sprite_tile = SpriteData(sprite_count, left, top, self.sprite_area[0], self.sprite_area[1], new_img)
-            sprite_tile.parent_str = self.sheet_path
+            sprite_tile.parent_object = self
             self.sprites.append(sprite_tile)
             sprite_count += 1
 
@@ -150,3 +192,9 @@ class SpriteSheet:
         """Get a sprite data object"""
         return self.sprites[index]
 
+    def get_data(self) -> list:
+        """Get the data for this SpriteSheet"""
+        return [self.sheet_path, self.spacing, self.sprite_area]
+
+# --------- yes
+register_tile_type(SpriteTile.tile_type, SpriteTile)
