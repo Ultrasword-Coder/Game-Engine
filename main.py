@@ -26,11 +26,11 @@ state.push_state(HANDLER)
 
 tile = "test/images/kirb.jpeg"
 c = HANDLER.make_template_chunk(0, 0)
-# for x in range(world.CHUNK_WIDTH):
-#     for y in range(world.CHUNK_HEIGHT):
-#         c.set_tile_at(c.create_grid_tile(x, y, tile))
+
 for x in range(CHUNK_WIDTH):
     c.set_tile_at(c.create_grid_tile(x, 7, tile, collide=True))
+
+tile = "test/images/blueberry.jpeg"
 for x in range(CHUNK_WIDTH):
     c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
 
@@ -55,9 +55,7 @@ Test = test.test(data, object_data)
 HANDLER.add_entity_auto(Test)
 
 # test serializing
-t = {}
-
-serialize.save_to_file("test.json", HANDLER.serialize())
+# serialize.save_to_file("test.json", HANDLER.serialize())
 
 # ----------------------------------------------------------------------- #
 
