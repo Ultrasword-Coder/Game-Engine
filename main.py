@@ -3,11 +3,11 @@ import pygame
 import engine
 from engine import window, clock, user_input, handler, draw
 from engine import filehandler, maths, animation, state, serialize
-from engine import spritesheet
+from engine import spritesheet, core_utils
 from engine.globals import *
 
 # create essential instances
-window.create_instance("Template", 1280, 720, f=pygame.RESIZABLE)
+window.create_instance("Template", 640, 360, f=pygame.RESIZABLE)
 window.set_scaling(True)
 # should use framebuffer!
 window.change_framebuffer(1280, 720, pygame.SRCALPHA)
@@ -16,6 +16,18 @@ window.change_framebuffer(1280, 720, pygame.SRCALPHA)
 FPS = 60 # change fps if needed
 BACKGROUND = (255, 255, 255) # change background color if needed
 
+# default state
+HANDLER = state.State()
+state.push_state(HANDLER)
+
+
+# load an audio
+audio = filehandler.get_audio("test/audio/mario.mp3")
+channel1 = filehandler.create_channel(1)
+
+audio.get_length()
+
+font = filehandler.get_font("test/fonts/Lato/Lato-Regular.ttf").get_font_size(20)
 # ----------------------------------------------------------------------- #
 
 
@@ -29,9 +41,19 @@ while running:
     # updates
     if state.CURRENT:
         state.CURRENT.update(clock.delta_time)
+    
+    if user_input.is_key_clicked(pygame.K_d):
+        channel1.play(audio)
+        print("playing audio")
 
     # render
     window.push_buffer((0,0))
+
+    # post processing sorta
+    f = font.render(f"FPS: {core_utils.get_frames_per_second(clock.delta_time):.2f}", False, (255, 0, 0))
+    window.INSTANCE.blit(f, (0, 0))
+
+    # update display
     pygame.display.flip()
 
     # update keyboard and mouse
@@ -72,7 +94,6 @@ while running:
 
     # update clock -- calculate delta time
     clock.update()
-    # update global clock - time sleep for vsync
-    window.GLOBAL_CLOCK.tick(clock.FPS)
+    window.GLOBAL_CLOCK.tick(FPS)
 
 pygame.quit()
