@@ -19,15 +19,6 @@ BACKGROUND = (255, 255, 255) # change background color if needed
 # default state
 HANDLER = state.State()
 state.push_state(HANDLER)
-
-
-# load an audio
-audio = filehandler.get_audio("test/audio/mario.mp3")
-channel1 = filehandler.create_channel(1)
-
-audio.get_length()
-
-font = filehandler.get_font("test/fonts/Lato/Lato-Regular.ttf").get_font_size(20)
 # ----------------------------------------------------------------------- #
 
 
@@ -45,16 +36,9 @@ while running:
     # updates
     if state.CURRENT:
         state.CURRENT.update(clock.delta_time)
-    if user_input.is_key_clicked(pygame.K_d):
-        channel1.play(audio)
-        print("playing audio")
 
     # render
     window.push_buffer((0,0))
-
-    # post processing sorta
-    f = font.render(f"FPS: {core_utils.get_frames_per_second(clock.delta_time):.2f}", False, (255, 0, 0))
-    window.INSTANCE.blit(f, (0, 0))
 
     # update display
     pygame.display.flip()
