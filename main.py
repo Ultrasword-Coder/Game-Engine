@@ -3,82 +3,60 @@ import pygame
 import engine
 from engine import window, clock, user_input, handler, draw
 from engine import filehandler, maths, animation, state, serialize
-from engine import spritesheet
+from engine import spritesheet, core_utils
 from engine.globals import *
 
-from objects import test
-
-background = (255, 255, 255)
-
 # create essential instances
-window.create_instance("Template", 1280, 720, f=pygame.RESIZABLE)
+window.create_instance("Template", 640, 360, f=pygame.RESIZABLE)
 window.set_scaling(True)
+# should use framebuffer!
 window.change_framebuffer(1280, 720, pygame.SRCALPHA)
 
+# ------------------------------ your code ------------------------------ #
+FPS = 60 # change fps if needed
+BACKGROUND = (255, 255, 255) # change background color if needed
 
-
-# handler object -> # TODO - abstract later 
-# HANDLER = state.State()
-# state.push_state(HANDLER)
-HANDLER = state.State.deserialize(serialize.load_json_data("test.json"))
+# default state
+HANDLER = state.State()
 state.push_state(HANDLER)
 
 
-# -------------------------------- testing ------------------------------ #
-# loading sprite sheet
-sheet = spritesheet.SpriteSheet("test/images/tilemap.png", 16, 16, 0, 0)
-def render_sprite_sheet(sheet):
-    """temporary function to render the sprite sheet"""
-    for data in sheet.iterate_images():
-        window.get_framebuffer().blit(data.tex, (data.x, data.y))
+# load an audio
+audio = filehandler.get_audio("test/audio/mario.mp3")
+channel1 = filehandler.create_channel(1)
 
+audio.get_length()
 
-
-# tile = "test/images/kirb.jpeg"
-# c = HANDLER.make_template_chunk(0, 0)
-# # for x in range(world.CHUNK_WIDTH):
-# #     for y in range(world.CHUNK_HEIGHT):
-# #         c.set_tile_at(c.create_grid_tile(x, y, tile))
-# for x in range(CHUNK_WIDTH):
-#     c.set_tile_at(c.create_grid_tile(x, 7, tile, collide=True))
-# for x in range(CHUNK_WIDTH):
-#     c.set_tile_at(c.create_grid_tile(x, 6, tile, collide=False))
-
-
-# c.set_tile_at(spritesheet.SpriteTile(5, 5, 1, sheet.get_sprite(12)))
-
-
-# img = filehandler.get_image("test/images/test1.png")
-
-# data = animation.create_animation_handler_from_json("test/ani/ani.json")
-# object_data = handler.ObjectData(100, 100, 100, 100)
-
-
-# Test = test.test()
-# Test.animation = data.get_registry()
-# object_data.set_object_params(Test)
-
-# HANDLER.add_entity_auto(Test)
-
-# serialize.save_to_file("test.json", HANDLER.serialize())
-
-
+font = filehandler.get_font("test/fonts/Lato/Lato-Regular.ttf").get_font_size(20)
 # ----------------------------------------------------------------------- #
 
 
-clock.start(fps=30)
+clock.start(fps=FPS)
 window.create_clock(clock.FPS)
 running = True
 while running:
+    # update clock -- calculate delta time
+    clock.update()
+    window.GLOBAL_CLOCK.tick(FPS)
+
     # fill instance
-    window.fill_buffer(background)
+    window.fill_buffer(BACKGROUND)
 
     # updates
-    HANDLER.update(clock.delta_time)
-    render_sprite_sheet(sheet)
+    if state.CURRENT:
+        state.CURRENT.update(clock.delta_time)
+    if user_input.is_key_clicked(pygame.K_d):
+        channel1.play(audio)
+        print("playing audio")
 
     # render
     window.push_buffer((0,0))
+
+    # post processing sorta
+    f = font.render(f"FPS: {core_utils.get_frames_per_second(clock.delta_time):.2f}", False, (255, 0, 0))
+    window.INSTANCE.blit(f, (0, 0))
+
+    # update display
     pygame.display.flip()
 
     # update keyboard and mouse
@@ -116,10 +94,5 @@ while running:
             pygame.display.update()
             # prevent re push
             window.INSTANCE_CHANGED = False
-
-    # update clock -- calculate delta time
-    clock.update()
-    # update global clock - time sleep for vsync
-    window.GLOBAL_CLOCK.tick(clock.FPS)
 
 pygame.quit()
