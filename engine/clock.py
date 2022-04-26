@@ -24,13 +24,10 @@ def update():
     global delta_time, start_time, end_time, wait_time, frame_time
     end_time = time.time()
     delta_time = end_time - start_time
-    start_time = end_time
-    # if wait_time > 0:
-    #     print(wait_time)
-    #     time.sleep(wait_time)
-    #     start_time = end_time + frame_time
-    # else:
-    #     start_time = end_time + delta_time
+    if delta_time < frame_time:
+        time.sleep(frame_time - delta_time)
+        delta_time = frame_time
+    start_time = time.time()
 
 
 # TODO - create a timer object

@@ -35,13 +35,16 @@ clock.start(fps=FPS)
 window.create_clock(clock.FPS)
 running = True
 while running:
+    # update clock -- calculate delta time
+    clock.update()
+    window.GLOBAL_CLOCK.tick(FPS)
+
     # fill instance
     window.fill_buffer(BACKGROUND)
 
     # updates
     if state.CURRENT:
         state.CURRENT.update(clock.delta_time)
-    
     if user_input.is_key_clicked(pygame.K_d):
         channel1.play(audio)
         print("playing audio")
@@ -91,9 +94,5 @@ while running:
             pygame.display.update()
             # prevent re push
             window.INSTANCE_CHANGED = False
-
-    # update clock -- calculate delta time
-    clock.update()
-    window.GLOBAL_CLOCK.tick(FPS)
 
 pygame.quit()
