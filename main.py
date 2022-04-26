@@ -118,7 +118,7 @@ while running:
             user_input.update_ratio(window.WIDTH, window.HEIGHT, window.ORIGINAL_WIDTH, window.ORIGINAL_HEIGHT)
         elif e.type == pygame.WINDOWMAXIMIZED:
             # window maximized
-            window.get_instance().fill(background)
+            window.get_instance().fill(BACKGROUND)
             # re render all entities
             HANDLER.render_all()
             # push frame
