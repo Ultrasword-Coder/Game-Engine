@@ -103,3 +103,7 @@ def previous_state(state: State) -> None:
 
 
 
+def pop_state():
+    """Pop a state"""
+    STATEQUEUE.pop()
+
