@@ -109,7 +109,7 @@ while running:
      # update clock -- calculate delta time
     
     # to get frames in a second
-    print(clock.delta_time)
+    # print(f"{clock.delta_time - clock.wait_time:.3f}")
     second += clock.delta_time
     frames += 1
     if second > 1:
