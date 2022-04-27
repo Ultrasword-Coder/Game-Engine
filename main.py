@@ -30,7 +30,8 @@ HANDLER = state.State.deserialize(filehandler.get_json_data("test/testlevel.json
 state.push_state(HANDLER)
 
 
-HANDLER.add_entity_auto(objecttest.Test())
+# HANDLER.add_entity_auto(objecttest.Test())
+# HANDLER.add_entity_auto(objecttest.AnimateTest())
 
 font = filehandler.get_font("test/fonts/Lato/Lato-Regular.ttf").get_font_size(20)
 
