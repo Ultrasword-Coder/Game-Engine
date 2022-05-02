@@ -52,7 +52,6 @@ second = 0
 
 while running:
     clock.update()
-    window.GLOBAL_CLOCK.tick(FPS)
 
     # fill instance
     window.fill_buffer(BACKGROUND)
@@ -117,6 +116,8 @@ while running:
         print(frames)
         frames = 0
         second = 0
+    window.GLOBAL_CLOCK.tick(FPS)
+
 
 
 pygame.quit()
